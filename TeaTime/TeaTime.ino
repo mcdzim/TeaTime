@@ -8,7 +8,7 @@ TeaTime v1.0
 #include <Servo.h>
 #include <Adafruit_NeoPixel.h>
 #include <math.h>
-#include "keys.h"
+#include "keys_eteaket.h"
 
 int servo_pin = 2;
 int led_pin = 4;
@@ -23,7 +23,8 @@ int servo_up = 105;
 int servo_down = 45;
 int servo_angle = servo_up;
 int servo_current = 0;
-
+int manual_time = 3;
+int manual_temp = 100;
 String brew_tea = "Tea";
 
 Servo servo;
@@ -40,6 +41,9 @@ WidgetLCD lcd(V8);
 // V6 = Roibos Tea (100C 5-7mins)
 // V7 = Guage (0-100%)
 // V8 = LCD Screen
+// V9 = manual timer secs
+// v10 = manual timer temp
+// v11 = start manual timer
 
 BLYNK_WRITE(V0)
 {
@@ -141,6 +145,65 @@ BLYNK_WRITE(V6) //Roibos Tea
   }
 }
 
+BLYNK_WRITE(V9) //Manually Tea Time 
+{
+    int manual_time = param.asInt();
+    brew_tea = "Custom Tea";
+    brew_temp = manual_temp;
+    int brew_mins = manual_time;
+    brew_time = brew_mins*60*1000;
+
+    brew_state = true;
+    brew_start = millis();
+
+    servo_angle = servo_down;
+    Serial.println("Start Brewing " + brew_tea);
+    lcd.clear(); //Use it to clear the LCD Widget
+    lcd.print(1, 0, brew_tea); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
+    lcd.print(1, 1, String(brew_mins) + "mins at " + String(brew_temp) + "C");
+
+  }
+
+BLYNK_WRITE(V10) //Manually Tea Temp 
+{
+    int manual_temp = param.asInt();
+    brew_tea = "Custom Tea";
+    brew_temp = manual_temp;
+    int brew_mins = manual_time;
+    brew_time = brew_mins*60*1000;
+
+    brew_state = true;
+    brew_start = millis();
+
+    servo_angle = servo_down;
+    Serial.println("Start Brewing " + brew_tea);
+    lcd.clear(); //Use it to clear the LCD Widget
+    lcd.print(1, 0, brew_tea); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
+    lcd.print(1, 1, String(brew_mins) + "mins at " + String(brew_temp) + "C");
+  }
+
+
+BLYNK_WRITE(V11) //Manually Tea
+{
+  if(param.asInt()){
+    brew_tea = "Tea";
+    brew_temp = manual_temp;
+    int brew_mins = 0;
+    brew_time = 1*1000; // 1 seconds
+
+    brew_state = true;
+    brew_start = millis();
+
+    servo_angle = servo_down;
+    Serial.println("Finish Brewing " + brew_tea);
+    lcd.clear(); //Use it to clear the LCD Widget
+    lcd.print(1, 0, brew_tea); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
+    lcd.print(1, 1, String(brew_mins) + "mins at " + String(brew_temp) + "C");
+
+
+  }
+}
+
 void setup()
 {
   // Debug console
@@ -179,7 +242,7 @@ void loop()
 
   
   servo.write(servo_angle);
-  Serial.println("Servo angle: " + String(servo_angle));
+  // Serial.println("Servo angle: " + String(servo_angle));
   pixels.show(); 
 
 
@@ -188,11 +251,13 @@ void loop()
     timer_sec = 0;
   }
   Blynk.virtualWrite(V1, timer_sec);
+  Blynk.virtualWrite(V9, (timer_sec/60));
   // Blynk.virtualWrite(V2, brew_state);
   Blynk.virtualWrite(V7, brew_temp);
+  Blynk.virtualWrite(V10, brew_temp);
 
   delay(100);
-  Serial.println("brew time:" + String(brew_time));
-  Serial.println("timer sec:" + String(timer_sec));
+  // Serial.println("brew time:" + String(brew_time));
+  // Serial.println("timer sec:" + String(timer_sec));
 
 }
