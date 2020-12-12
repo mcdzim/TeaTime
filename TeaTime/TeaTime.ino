@@ -1,5 +1,8 @@
 /*************************************************************
-TeaTime v1.0
+TeaTime v1.1
+
+v1.0: get working basically
+v1.1: add in custom timers and give to Eteaket
 
  *************************************************************/
 #define BLYNK_PRINT Serial
